@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'; // Correct import
-import { Box, Typography, Drawer, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, List, ListItem, ListItemText, Paper, IconButton, Snackbar, Alert, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button } from '@mui/material';
+import { Box, Typography, Drawer, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, List,
+        ListItem, ListItemText, Paper, IconButton, Snackbar, Alert, Dialog, DialogActions, DialogContent,
+        DialogTitle, TextField, Button } from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
 import axios from 'axios';
 import AppBarComponent from './CustomAppBar';
@@ -22,7 +24,7 @@ const AttendanceManagement = () => {
 
     const fetchAttendanceRecords = async () => {
         try {
-            const response = await axios.get(`http://localhost:5000/api/attendance`);
+            const response = await axios.get(`http://127.0.0.1:8000/api/attendance/`);
             if (Array.isArray(response.data)) {
                 setAttendanceRecords(response.data);
             } else {
@@ -34,11 +36,11 @@ const AttendanceManagement = () => {
             setAttendanceRecords([]);
         }
     };
-
+    
     const handleDeleteAttendance = async (attendance_id) => {
         if (window.confirm("Are you sure you want to delete this attendance record?")) {
             try {
-                const response = await axios.delete(`http://localhost:5000/api/attendance/${attendance_id}`);
+                const response = await axios.delete(`http://127.0.0.1:8000/api/attendance/${attendance_id}/`);
                 if (response.status === 200) {
                     fetchAttendanceRecords();
                     setSnackbarMessage('Attendance record deleted successfully!');
@@ -55,15 +57,13 @@ const AttendanceManagement = () => {
             setSnackbarOpen(true);
         }
     };
-
-    const handleEditAttendance = (attendance) => {
-        setCurrentAttendance(attendance);
-        setEditDialogOpen(true);
-    };
-
+    
     const handleSaveEdit = async () => {
         try {
-            const response = await axios.put(`http://localhost:5000/api/attendance/${currentAttendance.attendance_id}`, currentAttendance);
+            const response = await axios.put(
+                `http://127.0.0.1:8000/api/attendance/${currentAttendance.attendance_id}/`,
+                currentAttendance
+            );
             if (response.status === 200) {
                 fetchAttendanceRecords();
                 setSnackbarMessage('Attendance record updated successfully!');
@@ -80,6 +80,11 @@ const AttendanceManagement = () => {
             setSnackbarSeverity('error');
             setSnackbarOpen(true);
         }
+    };
+
+    const handleEditAttendance = (attendance) => {
+        setCurrentAttendance(attendance);
+        setEditDialogOpen(true);
     };
 
     const handleChange = (e) => {

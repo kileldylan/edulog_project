@@ -10,30 +10,28 @@ const Login = () => {
     const [error, setError] = useState(null);
     const navigate = useNavigate();
 
-    const handleSubmit = async (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
-        console.log("Sending credentials:", { email, password });  // Log the payload
         try {
-            const credentials = { email, password };
-            const data = await loginUser(credentials);
-            console.log("Login response:", data);  // Log the response
-    
-            // Store token in localStorage
-            storeToken(data.access_token);
-    
-            // Check user role and navigate accordingly
-            if (data.role === "admin") {
-                navigate("/adminHome"); // Redirect to Admin Dashboard
-            } else if (data.role === "student") {
-                navigate("/studentHome"); // Redirect to Student Dashboard
-            } else {
-                setError("Unknown user role");
-            }
+          const credentials = { email, password };
+          const data = await loginUser(credentials);
+      
+          // Store token and student_id in localStorage
+          storeToken(data.access_token);
+          localStorage.setItem('student_id', data.student_id)
+      
+          // Check user role and navigate accordingly
+          if (data.role === "admin") {
+            navigate("/adminHome");
+          } else if (data.role === "student") {
+            navigate("/studentHome");
+          } else {
+            setError("Unknown user role");
+          }
         } catch (err) {
-            console.error("Login error:", err);  // Log the error
-            setError(err.error || "Invalid credentials");
+          setError(err.error || "Invalid credentials");
         }
-    };
+      };
     
     return (
         <Container component="main" maxWidth="xs">
@@ -54,7 +52,7 @@ const Login = () => {
                         {error}
                     </Typography>
                 )}
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleLogin}>
                     <Grid container spacing={2}>
                         <Grid item xs={12}>
                             <TextField

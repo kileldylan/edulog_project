@@ -26,6 +26,21 @@ export const registerUser = async (userData) => {
     }
 }
 
+// Function to store token in localStorage
+export const storeToken = (token) => {
+  localStorage.setItem("access_token", token);
+};
+
+// Function to retrieve token from localStorage
+export const getToken = () => {
+  return localStorage.getItem("access_token");
+};
+
+// Function to logout student
+export const logoutStudent = () => {
+  localStorage.removeItem("access_token");
+};
+
 // Function to get authenticated user details
 export const getStudentProfile = async (token) => {
   try {
@@ -38,17 +53,85 @@ export const getStudentProfile = async (token) => {
   }
 };
 
-// Function to store token in localStorage
-export const storeToken = (token) => {
-  localStorage.setItem("authToken", token);
+// Function to fetch attendance stats for a student
+export const fetchAttendanceData = async (student_id) => {
+  try {
+    const token = localStorage.getItem("access_token");
+    const response = await axios.get(`${API_BASE_URL}/api/attendance/${student_id}/`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : { error: "Failed to fetch attendance data" };
+  }
 };
 
-// Function to retrieve token from localStorage
-export const getToken = () => {
-  return localStorage.getItem("authToken");
+// Function to fetch department-wise stats
+export const fetchDepartmentStats = async () => {
+  try {
+    const token = localStorage.getItem("access_token");
+    const response = await axios.get(`${API_BASE_URL}/api/students/stats/department-wise/`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : { error: "Failed to fetch department stats" };
+  }
 };
 
-// Function to logout student
-export const logoutStudent = () => {
-  localStorage.removeItem("authToken");
+// Function to fetch student details
+export const fetchStudentName = async (student_id) => {
+  try {
+    const token = localStorage.getItem("access_token");
+    const response = await axios.get(`${API_BASE_URL}/api/students/${student_id}/`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : { error: "Failed to fetch student details" };
+  }
+};
+
+// Function to handle clock-in
+export const clockIn = async (student_id) => {
+  try {
+    const token = localStorage.getItem("access_token");
+    const response = await axios.post(
+      `${API_BASE_URL}/api/attendance/clock-in/`,
+      { student_id },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : { error: "Failed to clock in" };
+  }
+};
+
+// Function to handle clock-out
+export const clockOut = async (student_id) => {
+  try {
+    const token = localStorage.getItem("access_token");
+    const response = await axios.post(
+      `${API_BASE_URL}/api/attendance/clock-out/`,
+      { student_id },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : { error: "Failed to clock out" };
+  }
 };
