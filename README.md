@@ -18,9 +18,12 @@ EduLog is a simple student attendance tracking system. It helps institutions kee
 ## How to Run  
 1. Clone the project:  
    ```bash
-   git clone https://github.com/yourusername/edulog.git
-   cd edulog
+   git clone https://github.com/kileldylan/edulog_project.git
+   cd edulog_project - to access backend and frontend folders
+   cd edulog_backend - for backend directory
+   cd edulog_frontend - for frontend directory
    ```  
+
 2. Install dependencies:  
    ```bash
    npm install
