@@ -19,7 +19,8 @@ const Login = () => {
           // Store token and student_id in localStorage
           storeToken(data.access_token);
           localStorage.setItem('student_id', data.student_id)
-      
+          localStorage.setItem('student_name', data.student_name)
+        
           // Check user role and navigate accordingly
           if (data.role === "admin") {
             navigate("/adminHome");

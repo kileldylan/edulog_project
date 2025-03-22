@@ -191,7 +191,7 @@ const StudentHome = () => {
   const fetchStudentName = useCallback(async (student_id) => {
     try {
       const response = await api.get(`students/${student_id}/`);
-      setStudentName(response.data.name);
+      setStudentName(response.data.student_name);
     } catch (error) {
       console.error('Failed to fetch student name', error);
     }
@@ -200,20 +200,30 @@ const StudentHome = () => {
   // Fetch data on component mount
   useEffect(() => {
     const student_id = localStorage.getItem('student_id');
+    const storedStudentName = localStorage.getItem('student_name');
+    console.log('Student ID:', student_id); // Debugging
+    console.log('Stored Student Name:', storedStudentName); // Debugging
+  
     if (student_id) {
       fetchAttendanceData(student_id);
       fetchDepartmentStats();
-      fetchStudentName(student_id);
+  
+      // Only fetch student name if it's not already set
+      if (!storedStudentName) {
+        fetchStudentName(student_id);
+      } else {
+        setStudentName(storedStudentName);
+      }
     } else {
       setSnackbar({
-        message: 'Error fetching student ID',
-        severity: 'error',
+        message: "Error fetching student ID",
+        severity: "error",
         open: true,
       });
       console.error("Student ID not found in localStorage.");
     }
-  }, [fetchAttendanceData, fetchDepartmentStats, fetchStudentName]); // Empty dependency array
-
+  }, [fetchAttendanceData, fetchDepartmentStats, fetchStudentName]);
+  
   // Handle clock-in/out
   const handleClockInOut = async () => {
     const student_id = localStorage.getItem('student_id');

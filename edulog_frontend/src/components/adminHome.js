@@ -9,7 +9,7 @@ import {
   Container,
   Grid,
   Paper,
-  Button
+  Button,
 } from '@mui/material';
 import { Pie, Bar } from 'react-chartjs-2';
 import {
@@ -26,7 +26,7 @@ import {
 } from 'chart.js';
 import { useNavigate } from 'react-router-dom';
 import AppBarComponent from './CustomAppBar';
-import axios from 'axios';
+import axiosInstance from '../utils/axiosInstance'; // Import the custom axiosInstance
 
 ChartJS.register(
   CategoryScale,
@@ -58,17 +58,17 @@ const AdminHome = ({ onLogout }) => {
 
     const fetchData = async () => {
       try {
-        const totalStudentsResponse = await axios.get(`http://localhost:5000/api/attendance/stats/total-students`);
-        const attendanceTodayResponse = await axios.get(`http://localhost:5000/api/attendance/stats/attendance-today`);
-        const absentStudentsResponse = await axios.get(`http://localhost:5000/api/attendance/stats/absent-students`);
-        const departmentStatsResponse = await axios.get(`http://localhost:5000/api/students/stats/department-wise`);
-        const attendancePercentageResponse = await axios.get(`http://localhost:5000/api/attendance/percentage`);
+        const totalStudentsResponse = await axiosInstance.get('/api/attendance/stats/total-students');
+        const attendanceTodayResponse = await axiosInstance.get('/api/attendance/stats/attendance-today');
+        const absentStudentsResponse = await axiosInstance.get('/api/attendance/stats/absent-students');
+        const departmentStatsResponse = await axiosInstance.get('/api/students/stats/department-wise');
+        const attendancePercentageResponse = await axiosInstance.get('/api/attendance/stats/percentage');
 
         setTotalStudents(totalStudentsResponse.data.total);
         setAttendanceToday(attendanceTodayResponse.data.attendancePercentage);
         setAbsentStudents(absentStudentsResponse.data.absentCount);
         setDepartmentStats(departmentStatsResponse.data);
-        setAttendanceData(Array.isArray(attendancePercentageResponse.data) ? attendancePercentageResponse.data : []);  // Ensure data is an array
+        setAttendanceData(Array.isArray(attendancePercentageResponse.data) ? attendancePercentageResponse.data : []); // Ensure data is an array
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -78,8 +78,8 @@ const AdminHome = ({ onLogout }) => {
   }, []);
 
   const getDepartmentChartData = () => {
-    const labels = departmentStats.map(stat => stat.department);
-    const data = departmentStats.map(stat => stat.student_count);
+    const labels = departmentStats.map((stat) => stat.department);
+    const data = departmentStats.map((stat) => stat.student_count);
 
     return {
       labels,
@@ -94,9 +94,7 @@ const AdminHome = ({ onLogout }) => {
     };
   };
 
-  // New function to get attendance percentage chart data
   const getAttendancePercentageChartData = () => {
-    // Check if attendanceData is an array and contains valid data
     if (!Array.isArray(attendanceData) || attendanceData.length === 0) {
       return {
         labels: [],
@@ -112,8 +110,8 @@ const AdminHome = ({ onLogout }) => {
       };
     }
 
-    const labels = attendanceData.map(record => record.name); // Or record.student_id
-    const data = attendanceData.map(record => record.attendance_percentage);
+    const labels = attendanceData.map((record) => record.name); // Or record.student_id
+    const data = attendanceData.map((record) => record.attendance_percentage);
 
     return {
       labels,
@@ -139,14 +137,15 @@ const AdminHome = ({ onLogout }) => {
   };
 
   const handleAttendanceManagement = () => {
-    navigate('/attendance'); // Redirect to login page
+    navigate('/attendance');
   };
 
   const handleGenerateReports = () => {
     navigate('/reports');
   };
 
-  return (
+
+return (
     <>
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
     <AppBarComponent toggleDrawer={toggleDrawer} />

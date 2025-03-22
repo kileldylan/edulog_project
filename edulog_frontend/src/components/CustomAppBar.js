@@ -42,9 +42,9 @@ const AppBarComponent = ({ openDrawer, toggleDrawer }) => {
               aria-label="account of current user"
               onClick={handleMenu}
             >
+            </IconButton>
             <IconButton color="inherit" onClick={() => navigate('/profile')}>
                 <AccountCircleIcon />
-            </IconButton>
             </IconButton>
             <Menu
               anchorEl={anchorEl}
