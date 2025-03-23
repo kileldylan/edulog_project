@@ -34,7 +34,7 @@ EduLog is a simple student attendance tracking system. It helps institutions kee
    ```  
 4. . Start the backend-server:  
    ```bash
-    python manage.py runserver_plus --cert-file cert.pem
+    python manage.py runserver
    ```  
 
 ## Future Improvements  

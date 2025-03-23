@@ -1,11 +1,11 @@
 // src/App.js
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import Login from './components/login';
 import Register from './components/register';
 import AdminHome from './components/adminHome';
 import StudentManagement from './components/studentsManagement';
-import AttendanceRecords from './components/attendance';
+import AttendanceRecords from './components/attendanceManagement';
 import StudentHome from './components/studentHome';
 import CalendarPage from './components/calendarPage';
 import ProfilePage from './components/profilePage';
@@ -17,6 +17,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
         <Route path="/adminHome" element={<AdminHome/>} />
         <Route path="/register" element={<Register />} />
         <Route path= "/studentsManagement" element={<StudentManagement/>} />

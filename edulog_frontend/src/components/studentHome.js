@@ -261,7 +261,11 @@ const StudentHome = () => {
         });
         setIsClockedIn(!isClockedIn);
         localStorage.setItem('isClockedIn', JSON.stringify(!isClockedIn));
-        fetchAttendanceData(student_id); // Refresh attendance data
+  
+        // Refresh attendance data after clocking out
+        if (isClockedIn) {
+          await fetchAttendanceData(student_id);
+        }
       } else {
         throw new Error('Unexpected response from server');
       }
@@ -330,7 +334,7 @@ const StudentHome = () => {
         <Box display="flex" justifyContent="center">
           <SwipeButton checked={isClockedIn} onChange={handleClockInOut} />
           <Typography variant="subtitle1" sx={{ ml: 1 }}>
-            {isClockedIn ? 'Clocked In' : 'Clocked Out'}
+            {isClockedIn ? 'Clock Out' : 'Clock In'}
           </Typography>
         </Box>
 
