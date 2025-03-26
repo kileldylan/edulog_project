@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { TextField, Button, Typography, Container, Grid, Box, Paper } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import loginImage from './images/loginImage.jpg'; // Adjust the path based on your folder structure
-import { loginUser, storeToken } from "../utils/api";
+import { loginUser} from "../utils/api";
+import axiosInstance  from '../utils/axiosInstance';
 
 const Login = () => {
     const [email, setEmail] = useState(''); 
@@ -12,27 +13,35 @@ const Login = () => {
 
     const handleLogin = async (e) => {
         e.preventDefault();
-        try {
-          const credentials = { email, password };
-          const data = await loginUser(credentials);
+        setError(null);
       
-          // Store token and student_id in localStorage
-          storeToken(data.access_token);
-          localStorage.setItem('student_id', data.student_id)
-          localStorage.setItem('student_name', data.student_name)
-        
-          // Check user role and navigate accordingly
-          if (data.role === "admin") {
-            navigate("/adminHome");
-          } else if (data.role === "student") {
-            navigate("/studentHome");
-          } else {
-            setError("Unknown user role");
+        try {
+          const response = await loginUser({ email, password });
+          
+          // Clear all previous sessions
+          sessionStorage.clear();
+      
+          // Store auth data
+          sessionStorage.setItem('access_token', response.access_token);
+          sessionStorage.setItem('refresh_token', response.refresh_token);
+          sessionStorage.setItem('role', response.role);
+      
+          // Store student-specific data
+          if (response.role === 'student') {
+            sessionStorage.setItem('student_id', response.student_id);
+            sessionStorage.setItem('student_name', response.student_name);
           }
+      
+          // Set axiosInstance default headers
+          axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${response.access_token}`;
+          
+          navigate(response.role === 'admin' ? '/adminHome' : '/studentHome');
+      
         } catch (err) {
-          setError(err.error || "Invalid credentials");
+          setError(err.response?.data?.error || err.message || 'Login failed');
+          sessionStorage.clear();
         }
-      };
+    };
     
     return (
         <Container component="main" maxWidth="xs">

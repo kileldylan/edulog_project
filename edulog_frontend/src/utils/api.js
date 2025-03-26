@@ -1,4 +1,5 @@
 import axios from "axios";
+import axiosInstance from "./axiosInstance";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000"; // Backend URL
 
@@ -37,10 +38,17 @@ export const getToken = () => {
 };
 
 // Function to logout student
-export const logoutStudent = () => {
-  localStorage.removeItem("access_token");
+export const logout = () => {
+  // Clear current tab's session
+  sessionStorage.clear();
+  
+  // Notify other tabs via localStorage
+  localStorage.setItem('logout_event', Date.now().toString());
+  localStorage.removeItem('logout_event');
+  
+  // Redirect
+  window.location.href = '/login';
 };
-
 // Function to get authenticated user details
 export const getStudentProfile = async (token) => {
   try {
@@ -65,6 +73,16 @@ export const fetchAttendanceData = async (student_id) => {
     return response.data;
   } catch (error) {
     throw error.response ? error.response.data : { error: "Failed to fetch attendance data" };
+  }
+};
+
+export const fetchAllAttendanceRecords = async () => {
+  try {
+    const response = await axiosInstance.get('/admin/attendance/');
+    return response.data;
+  } catch (error) {
+    console.error('API Error:', error.response || error);
+    throw error.response?.data || { error: 'Failed to fetch records' };
   }
 };
 

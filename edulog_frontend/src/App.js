@@ -1,5 +1,4 @@
-// src/App.js
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import Login from './components/login';
 import Register from './components/register';
@@ -11,22 +10,61 @@ import CalendarPage from './components/calendarPage';
 import ProfilePage from './components/profilePage';
 import StudentProfile from './components/studentProfile';
 import ReportsPage from './components/reports';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
+  // Handle cross-tab logout
+  useEffect(() => {
+    const handleStorageChange = (event) => {
+      if (event.key === 'logout_event') {
+        sessionStorage.clear();
+        window.location.href = '/login?reason=logged_out';
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
   return (
     <Router>
       <Routes>
+        {/* Public routes */}
         <Route path="/login" element={<Login />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
-        <Route path="/adminHome" element={<AdminHome/>} />
         <Route path="/register" element={<Register />} />
-        <Route path= "/studentsManagement" element={<StudentManagement/>} />
-        <Route path= "/attendance" element= {<AttendanceRecords/>} />
-        <Route path= "/studentHome" element= {<StudentHome/>} />
-        <Route path= "/calendarPage" element= {<CalendarPage/>} />
-        <Route path="/profile" element={<ProfilePage/>} />
-        <Route path ="/studentProfile" element={<StudentProfile/>} />
-        <Route path="/reports" element={<ReportsPage/>} />
+        
+        {/* Admin routes */}
+        <Route path="/adminHome" element={
+          <ProtectedRoute allowedRoles={['admin']}><AdminHome /></ProtectedRoute>
+        } />
+        <Route path="/studentsManagement" element={
+          <ProtectedRoute allowedRoles={['admin']}><StudentManagement /></ProtectedRoute>
+        } />
+        <Route path="/attendance" element={
+          <ProtectedRoute allowedRoles={['admin']}><AttendanceRecords /></ProtectedRoute>
+        } />
+        <Route path="/reports" element={
+          <ProtectedRoute allowedRoles={['admin']}><ReportsPage /></ProtectedRoute>
+        } />
+        
+        {/* Student routes */}
+        <Route path="/studentHome" element={
+          <ProtectedRoute allowedRoles={['student']}><StudentHome /></ProtectedRoute>
+        } />
+        <Route path="/calendarPage" element={
+          <ProtectedRoute allowedRoles={['student']}><CalendarPage /></ProtectedRoute>
+        } />
+        <Route path="/profile" element={
+          <ProtectedRoute allowedRoles={['student']}><ProfilePage /></ProtectedRoute>
+        } />
+        
+        {/* Shared routes */}
+        <Route path="/studentProfile" element={
+          <ProtectedRoute allowedRoles={['admin', 'student']}><StudentProfile /></ProtectedRoute>
+        } />
+        
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>
   );

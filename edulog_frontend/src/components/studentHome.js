@@ -15,7 +15,7 @@ import {
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import axios from 'axios';
+import axiosInstance from '../utils/axiosInstance';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import SwipeableDrawer from '@mui/material/SwipeableDrawer';
@@ -71,87 +71,13 @@ const OverviewCard = ({ title, count, icon, color }) => (
   </Card>
 );
 
-// Create a stable API instance
-const api = axios.create({
-  baseURL: 'http://127.0.0.1:8000/api/',
-});
-
-const token = localStorage.getItem('access_token');
-console.log("Stored Token:", token); 
-
-const refreshToken = async () => {
-  try {
-    const refreshToken = localStorage.getItem('refresh_token');
-    if (!refreshToken) {
-      throw new Error("No refresh token found");
-    }
-
-    const response = await axios.post('/api/token/refresh/', { refresh: refreshToken });
-    const newAccessToken = response.data.access;
-
-    // Update the access token in localStorage
-    localStorage.setItem('access_token', newAccessToken);
-
-    return newAccessToken;
-  } catch (error) {
-    console.error("Failed to refresh token:", error);
-    // Clear tokens and redirect to login if refresh fails
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    window.location.href = '/'; // Redirect to login page
-    throw error; // Re-throw the error to stop the request
-  }
-};
-
-// Add a request interceptor to include the token in every request
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("access_token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-}, (error) => {
-  return Promise.reject(error);
-});
-
-// Add a response interceptor to handle token refresh
-api.interceptors.response.use(
-  (response) => response, // Return the response if successful
-  async (error) => {
-    const originalRequest = error.config;
-
-    // Check if the error is due to an expired token (401 Unauthorized)
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true; // Mark the request as retried
-
-      try {
-        // Refresh the token
-        const newAccessToken = await refreshToken();
-
-        // Update the Authorization header with the new token
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-
-        // Retry the original request with the new token
-        return api(originalRequest);
-      } catch (refreshError) {
-        console.error("Failed to refresh token:", refreshError);
-        // Redirect to login if token refresh fails
-        window.location.href = '/login';
-        return Promise.reject(refreshError);
-      }
-    }
-
-    // If the error is not due to an expired token, reject it
-    return Promise.reject(error);
-  }
-);
-
 const StudentHome = () => {
   const [isClockedIn, setIsClockedIn] = useState(false);
   const [swipeDrawer, setSwipeDrawer] = useState(false);
   const [departmentStats, setDepartmentStats] = useState([]);
   const [studentName, setStudentName] = useState('');
   const navigate = useNavigate();
+  // Removed todaysAttendance because it was unused
   const [attendanceStats, setAttendanceStats] = useState({
     present: 0,
     absent: 0,
@@ -166,8 +92,12 @@ const StudentHome = () => {
   // Memoized function to fetch attendance data
   const fetchAttendanceData = useCallback(async (student_id) => {
     try {
-      const response = await api.get(`attendance/${student_id}/`);
-      setAttendanceStats(response.data);
+      const [stats] = await Promise.all([
+        axiosInstance.get(`/api/attendance/${student_id}/`)
+        // Removed attendance/today if not used
+      ]);
+      
+      setAttendanceStats(stats.data);
     } catch (error) {
       setSnackbar({
         message: 'Failed to fetch attendance data',
@@ -175,32 +105,32 @@ const StudentHome = () => {
         open: true,
       });
     }
-  }, []); // Empty dependency array
+  }, []);
 
   // Memoized function to fetch department stats
   const fetchDepartmentStats = useCallback(async () => {
     try {
-      const response = await api.get('students/stats/department-wise/');
+      const response = await axiosInstance.get('/api/students/stats/department-wise/');
       setDepartmentStats(response.data);
     } catch (error) {
       console.error('Failed to fetch department stats', error);
     }
-  }, []); // Empty dependency array
+  }, []);
 
   // Memoized function to fetch student name
   const fetchStudentName = useCallback(async (student_id) => {
     try {
-      const response = await api.get(`students/${student_id}/`);
+      const response = await axiosInstance.get(`/api/students/${student_id}/`);
       setStudentName(response.data.student_name);
     } catch (error) {
       console.error('Failed to fetch student name', error);
     }
-  }, []); // Empty dependency array
+  }, []);
 
   // Fetch data on component mount
   useEffect(() => {
-    const student_id = localStorage.getItem('student_id');
-    const storedStudentName = localStorage.getItem('student_name');
+    const student_id = sessionStorage.getItem('student_id');
+    const storedStudentName = sessionStorage.getItem('student_name');
     console.log('Student ID:', student_id); // Debugging
     console.log('Stored Student Name:', storedStudentName); // Debugging
   
@@ -222,62 +152,53 @@ const StudentHome = () => {
       });
       console.error("Student ID not found in localStorage.");
     }
+    const checkClockStatus = async () => {
+      try {
+        const student_id = sessionStorage.getItem('student_id');
+        if (student_id) {
+          const response = await axiosInstance.get(`/api/attendance/${student_id}/status/`);
+          setIsClockedIn(response.data.is_clocked_in);
+        }
+      } catch (error) {
+        console.error('Error checking clock status:', error);
+      }
+    };
+    checkClockStatus();
   }, [fetchAttendanceData, fetchDepartmentStats, fetchStudentName]);
   
   // Handle clock-in/out
   const handleClockInOut = async () => {
-    const student_id = localStorage.getItem('student_id');
-    const token = localStorage.getItem('access_token');
-  
-    if (!student_id) {
-      setSnackbar({
-        message: 'Student ID is missing',
-        severity: 'error',
-        open: true,
-      });
-      return;
-    }
-  
-    const apiUrl = isClockedIn
-      ? '/attendance/clock-out/'
-      : '/attendance/clock-in/';
-  
     try {
-      const response = await api.post(
-        apiUrl,
-        { student_id },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-  
-      if (response.status === 200 || response.status === 201) {
-        setSnackbar({
-          message: isClockedIn ? 'Clocked out successfully' : 'Clocked in successfully',
-          severity: 'success',
-          open: true,
-        });
-        setIsClockedIn(!isClockedIn);
-        localStorage.setItem('isClockedIn', JSON.stringify(!isClockedIn));
-  
-        // Refresh attendance data after clocking out
-        if (isClockedIn) {
-          await fetchAttendanceData(student_id);
-        }
-      } else {
-        throw new Error('Unexpected response from server');
-      }
-    } catch (error) {
-      console.error("Error during clock-in/out:", error);
+      const endpoint = isClockedIn ? '/api/attendance/clock-out/' : '/api/attendance/clock-in/';
+      const response = await axiosInstance.post(endpoint);
+      
       setSnackbar({
-        message: error.response?.data?.message || 'Error updating attendance status',
+        message: response.data.message,
+        severity: 'success',
+        open: true,
+      });
+      
+      // When clocking in, update the present count from the API response
+      if (!isClockedIn && response.data.updated_present_count !== undefined) {
+        setAttendanceStats(prev => ({
+          ...prev,
+          present: response.data.updated_present_count
+        }));
+      }
+      
+      // Toggle clock status
+      setIsClockedIn(!isClockedIn);
+    } catch (error) {
+      setSnackbar({
+        message: error.response?.data?.error || 'Clock operation failed',
         severity: 'error',
         open: true,
       });
     }
-  };
+  };  
+
+  // Use the computed present days count
+  const presentDaysCount = attendanceStats.present || 0;
 
   return (
     <DashboardContainer>
@@ -304,7 +225,7 @@ const StudentHome = () => {
             <>
               <OverviewCard
                 title="Days Present"
-                count={attendanceStats.present || 0}
+                count={presentDaysCount}
                 icon={<CheckCircleOutlineIcon fontSize="large" />}
                 color="#66bb6a"
               />
