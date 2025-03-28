@@ -27,6 +27,16 @@ export const registerUser = async (userData) => {
     }
 }
 
+export const fetchDepartments = async () => {
+  try {
+    const response = await axiosInstance.get('/departments/');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching departments:', error);
+    throw error;
+  }
+};
+
 // Function to store token in localStorage
 export const storeToken = (token) => {
   localStorage.setItem("access_token", token);

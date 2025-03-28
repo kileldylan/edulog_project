@@ -28,7 +28,6 @@ const AttendanceManagement = () => {
     const [drawerOpen, setDrawerOpen] = useState(false);
     const navigate = useNavigate();
 
-    // Wrap fetchAttendanceRecords with useCallback
     const fetchAttendanceRecords = useCallback(async () => {
         try {
             const response = await axiosInstance.get('/admin/attendance/');
@@ -66,8 +65,6 @@ const AttendanceManagement = () => {
     const handleEdit = (record) => {
         setCurrentRecord({
             id: record.id,
-            student_id: record.user?.student_id || '',
-            student_name: record.student_name,
             date: record.date,
             status: record.status,
             clock_in_time: record.clock_in_time || '',
@@ -78,15 +75,34 @@ const AttendanceManagement = () => {
 
     const handleSave = async () => {
         try {
+            // Prepare payload - only include fields that can be updated
+            const payload = {
+                date: currentRecord.date,
+                status: currentRecord.status,
+                clock_in_time: currentRecord.clock_in_time || null,
+                clock_out_time: currentRecord.clock_out_time || null
+            };
+    
             await axiosInstance.put(
-                `/admin/attendance/${currentRecord.id}/`,
-                currentRecord
+                `/api/attendance/update/${currentRecord.id}/`,
+                payload
             );
             fetchAttendanceRecords();
             showSnackbar('Record updated successfully', 'success');
             setEditDialogOpen(false);
         } catch (error) {
-            showSnackbar(error.response?.data?.error || 'Failed to update record', 'error');
+            // Enhanced error logging
+            console.error('Update error details:', {
+                status: error.response?.status,
+                data: error.response?.data,
+                request: error.config
+            });
+            showSnackbar(
+                error.response?.data?.error || 
+                JSON.stringify(error.response?.data) || 
+                'Failed to update record', 
+                'error'
+            );
         }
     };
 
@@ -147,10 +163,10 @@ const AttendanceManagement = () => {
                         </TableHead>
                         <TableBody>
                             {attendanceRecords.length > 0 ? (
-                                attendanceRecords.map((record) => (
+                                attendanceRecords.map((record) => ( 
                                     <TableRow key={record.id}>
                                         <TableCell>{record.id}</TableCell>
-                                        <TableCell>{record.user?.student_id || 'N/A'}</TableCell>
+                                        <TableCell>{record.student_id || record.user?.student_id || 'N/A'}</TableCell>
                                         <TableCell>{record.student_name}</TableCell>
                                         <TableCell>{record.date}</TableCell>
                                         <TableCell>{record.status}</TableCell>
@@ -178,22 +194,6 @@ const AttendanceManagement = () => {
                 <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)}>
                     <DialogTitle>Edit Attendance Record</DialogTitle>
                     <DialogContent>
-                        <TextField
-                            margin="normal"
-                            fullWidth
-                            label="Student ID"
-                            name="student_id"
-                            value={currentRecord.student_id}
-                            onChange={handleChange}
-                        />
-                        <TextField
-                            margin="normal"
-                            fullWidth
-                            label="Student Name"
-                            name="student_name"
-                            value={currentRecord.student_name}
-                            onChange={handleChange}
-                        />
                         <TextField
                             margin="normal"
                             fullWidth

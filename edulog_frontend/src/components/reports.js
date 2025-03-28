@@ -16,6 +16,9 @@ import {
   TableRow,
   Paper,
   Typography,
+  TextField,
+  Autocomplete,
+  CircularProgress
 } from '@mui/material';
 import axiosInstance from '../utils/axiosInstance';
 
@@ -24,22 +27,74 @@ const ReportsPage = () => {
   const [endDate, setEndDate] = useState(null);
   const [statusFilter, setStatusFilter] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('');
-  const [studentNameFilter, setStudentNameFilter] = useState('');
+  const [studentFilter, setStudentFilter] = useState(null);
   const [reportsData, setReportsData] = useState([]);
   const [exportData, setExportData] = useState([]);
+  const [filterOptions, setFilterOptions] = useState({
+    departments: [],
+    statusChoices: ['present', 'absent', 'late', 'pending']
+  });
+  const [studentSearchResults, setStudentSearchResults] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchInput, setSearchInput] = useState('');
+  const [loading, setLoading] = useState(true);
 
-  // Fetch reports based on filters
+  // Fetch filter options on component mount
+  useEffect(() => {
+    const fetchFilterOptions = async () => {
+      try {
+        const response = await axiosInstance.get('/api/attendance/reports/filters/');
+        setFilterOptions(prev => ({
+          ...prev,
+          departments: response.data.departments || []
+        }));
+      } catch (error) {
+        console.error('Error fetching filter options:', error);
+      }
+    };
+    fetchFilterOptions();
+  }, []);
+
+  // Search for students when input changes
+  useEffect(() => {
+    const searchStudents = async () => {
+      if (searchInput.length > 1) { // Only search after 2 characters
+        setSearchLoading(true);
+        try {
+          const response = await axiosInstance.get('/api/attendance/reports/students/', {
+            params: { q: searchInput }
+          });
+          setStudentSearchResults(response.data);
+        } catch (error) {
+          console.error('Error searching students:', error);
+        } finally {
+          setSearchLoading(false);
+        }
+      }
+    };
+
+    const debounceTimer = setTimeout(searchStudents, 500);
+    return () => clearTimeout(debounceTimer);
+  }, [searchInput]);
+
+  // Fetch reports based on filters - now also runs on initial load
   const fetchReports = useCallback(async () => {
+    setLoading(true);
     try {
-      const response = await axiosInstance.get('/api/attendance/reports/', {
-        params: {
-          startDate: startDate ? startDate.toISOString().split('T')[0] : null,
-          endDate: endDate ? endDate.toISOString().split('T')[0] : null,
-          statusFilter,
-          departmentFilter,
-          studentNameFilter,
-        },
-      });
+      const params = {
+        startDate: startDate ? startDate.toISOString().split('T')[0] : null,
+        endDate: endDate ? endDate.toISOString().split('T')[0] : null,
+        statusFilter,
+        departmentFilter,
+      };
+
+      // Add student filter if selected
+      if (studentFilter) {
+        params.studentId = studentFilter.id;
+      }
+
+      const response = await axiosInstance.get('/api/attendance/reports/', { params });
+      
       setReportsData(response.data);
       setExportData(response.data.map((report) => ({
         Date: report.attendanceDate,
@@ -50,10 +105,12 @@ const ReportsPage = () => {
       })));
     } catch (error) {
       console.error('Error fetching reports:', error);
+    } finally {
+      setLoading(false);
     }
-  }, [startDate, endDate, statusFilter, departmentFilter, studentNameFilter]);
+  }, [startDate, endDate, statusFilter, departmentFilter, studentFilter]);
 
-  // Fetch reports on filter change
+  // Fetch data on initial load and when filters change
   useEffect(() => {
     fetchReports();
   }, [fetchReports]);
@@ -66,22 +123,44 @@ const ReportsPage = () => {
     XLSX.writeFile(workbook, 'attendance_reports.xlsx');
   };
 
+  // Format status for display
+  const formatStatus = (status) => {
+    return status.charAt(0).toUpperCase() + status.slice(1);
+  };
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height="80vh">
+        <CircularProgress size={60} />
+      </Box>
+    );
+  }
+
   return (
     <Box padding={3}>
       <Typography variant="h4" gutterBottom>
         Attendance Reports
       </Typography>
 
-      <Box display="flex" gap={2} marginBottom={3}>
+      <Box display="flex" flexWrap="wrap" gap={2} marginBottom={3}>
         <DatePicker
           selected={startDate}
           onChange={(date) => setStartDate(date)}
           placeholderText="Start Date"
+          className="date-picker"
+          selectsStart
+          startDate={startDate}
+          endDate={endDate}
         />
         <DatePicker
           selected={endDate}
           onChange={(date) => setEndDate(date)}
           placeholderText="End Date"
+          className="date-picker"
+          selectsEnd
+          startDate={startDate}
+          endDate={endDate}
+          minDate={startDate}
         />
 
         <Select
@@ -89,10 +168,14 @@ const ReportsPage = () => {
           onChange={(e) => setStatusFilter(e.target.value)}
           displayEmpty
           variant="outlined"
+          sx={{ minWidth: 180 }}
         >
           <MenuItem value="">All Status</MenuItem>
-          <MenuItem value="present">Present</MenuItem>
-          <MenuItem value="absent">Absent</MenuItem>
+          {filterOptions.statusChoices.map((status) => (
+            <MenuItem key={status} value={status}>
+              {formatStatus(status)}
+            </MenuItem>
+          ))}
         </Select>
 
         <Select
@@ -100,37 +183,64 @@ const ReportsPage = () => {
           onChange={(e) => setDepartmentFilter(e.target.value)}
           displayEmpty
           variant="outlined"
+          sx={{ minWidth: 180 }}
         >
           <MenuItem value="">All Departments</MenuItem>
-          <MenuItem value="Department 1">Department 1</MenuItem>
-          <MenuItem value="Department 2">Department 2</MenuItem>
-          {/* Add more departments as needed */}
+          {filterOptions.departments.map((dept) => (
+            <MenuItem key={dept} value={dept}>
+              {dept}
+            </MenuItem>
+          ))}
         </Select>
 
-        <Select
-          value={studentNameFilter}
-          onChange={(e) => setStudentNameFilter(e.target.value)}
-          displayEmpty
-          variant="outlined"
+        <Autocomplete
+          options={studentSearchResults}
+          getOptionLabel={(option) => `${option.username} (${option.student_id})`}
+          value={studentFilter}
+          onChange={(_, newValue) => setStudentFilter(newValue)}
+          onInputChange={(_, newInputValue) => setSearchInput(newInputValue)}
+          loading={searchLoading}
+          sx={{ minWidth: 300 }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Search Student (name or ID)"
+              variant="outlined"
+              InputProps={{
+                ...params.InputProps,
+                endAdornment: (
+                  <>
+                    {searchLoading ? <CircularProgress color="inherit" size={20} /> : null}
+                    {params.InputProps.endAdornment}
+                  </>
+                ),
+              }}
+            />
+          )}
+        />
+
+        <Button 
+          variant="contained" 
+          color="primary" 
+          onClick={fetchReports}
+          disabled={loading}
         >
-          <MenuItem value="">All Students</MenuItem>
-          {/* Optionally, fetch and add student names dynamically */}
-          <MenuItem value="John Doe">John Doe</MenuItem>
-          <MenuItem value="Jane Smith">Jane Smith</MenuItem>
-        </Select>
-
-        <Button variant="contained" color="primary" onClick={fetchReports}>
-          Apply Filters
+          {loading ? 'Refreshing...' : 'Refresh Data'}
         </Button>
       </Box>
 
       <Box display="flex" gap={2} marginBottom={3}>
-        <CSVLink data={exportData} filename="attendance_reports.csv" className="btn btn-success">
-          <Button variant="contained" color="success">
+        <CSVLink data={exportData} filename="attendance_reports.csv">
+          <Button variant="contained" color="success" disabled={reportsData.length === 0}>
             Export CSV
           </Button>
         </CSVLink>
-        <Button variant="contained" color="info" onClick={exportToExcel}>
+        <Button 
+          variant="contained" 
+          color="info" 
+          onClick={exportToExcel}
+          disabled={reportsData.length === 0}
+        >
           Export Excel
         </Button>
       </Box>
@@ -147,15 +257,23 @@ const ReportsPage = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {reportsData.map((report, index) => (
-              <TableRow key={index}>
-                <TableCell>{report.attendanceDate}</TableCell>
-                <TableCell>{report.studentName}</TableCell>
-                <TableCell>{report.status}</TableCell>
-                <TableCell>{report.department}</TableCell>
-                <TableCell>{report.attendancePercentage}%</TableCell>
+            {reportsData.length > 0 ? (
+              reportsData.map((report, index) => (
+                <TableRow key={index}>
+                  <TableCell>{report.attendanceDate}</TableCell>
+                  <TableCell>{report.studentName}</TableCell>
+                  <TableCell>{formatStatus(report.status)}</TableCell>
+                  <TableCell>{report.department}</TableCell>
+                  <TableCell>{report.attendancePercentage}%</TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={5} align="center">
+                  No attendance records found matching your filters
+                </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </TableContainer>
