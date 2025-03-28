@@ -70,9 +70,6 @@ const AppBarComponent = ({ openDrawer, toggleDrawer }) => {
           <ListItem button={true} onClick={() => handleNavigation('/attendance')}>
             <ListItemText primary="Attendance Records" />
           </ListItem>
-          <ListItem button={true} onClick={() => handleNavigation('/studentsManagement')}>
-            <ListItemText primary="Students" />
-          </ListItem>
           <ListItem button={true} onClick={() => handleNavigation('/reports')}>
             <ListItemText primary="Reports" />
           </ListItem>

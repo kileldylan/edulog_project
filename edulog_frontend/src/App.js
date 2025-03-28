@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import Login from './components/login';
 import Register from './components/register';
 import AdminHome from './components/adminHome';
-import StudentManagement from './components/studentsManagement';
 import AttendanceRecords from './components/attendanceManagement';
 import StudentHome from './components/studentHome';
 import CalendarPage from './components/calendarPage';
@@ -37,9 +36,6 @@ function App() {
         <Route path="/adminHome" element={
           <ProtectedRoute allowedRoles={['admin']}><AdminHome /></ProtectedRoute>
         } />
-        <Route path="/studentsManagement" element={
-          <ProtectedRoute allowedRoles={['admin']}><StudentManagement /></ProtectedRoute>
-        } />
         <Route path="/attendance" element={
           <ProtectedRoute allowedRoles={['admin']}><AttendanceRecords /></ProtectedRoute>
         } />
@@ -52,7 +48,7 @@ function App() {
           <ProtectedRoute allowedRoles={['student']}><StudentHome /></ProtectedRoute>
         } />
         <Route path="/calendarPage" element={
-          <ProtectedRoute allowedRoles={['student']}><CalendarPage /></ProtectedRoute>
+          <ProtectedRoute allowedRoles={['admin', 'student']}><CalendarPage /></ProtectedRoute>
         } />
         <Route path="/profile" element={
           <ProtectedRoute allowedRoles={['student']}><ProfilePage /></ProtectedRoute>

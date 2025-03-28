@@ -1,11 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { Grid, Drawer, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Typography, List, ListItem, ListItemText, } from '@mui/material';
+import { 
+  Grid, 
+  Button, 
+  Dialog, 
+  DialogActions, 
+  DialogContent, 
+  DialogTitle, 
+  TextField, 
+  Typography, 
+  CircularProgress,
+  Box,
+  Chip
+} from '@mui/material';
 import { Calendar } from 'react-calendar';
-import 'react-calendar/dist/Calendar.css'; // Default styling for Calendar
+import 'react-calendar/dist/Calendar.css';
 import { styled } from '@mui/system';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom'; // Correct import
-import AppBarComponent from './CustomAppBar';
+import axiosInstance from '../utils/axiosInstance';
+import CustomAppBar from '../components//CustomAppBar';
+import EventIcon from '@mui/icons-material/Event';
+import AddIcon from '@mui/icons-material/Add';
 
 const CalendarWrapper = styled('div')({
   display: 'flex',
@@ -17,74 +30,133 @@ const CalendarWrapper = styled('div')({
 
 const CalendarPage = () => {
   const [date, setDate] = useState(new Date());
-  const [attendanceData, setAttendanceData] = useState([]);
-  const [open, setOpen] = useState(false);
-  const [attendanceRemark, setAttendanceRemark] = useState('');
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [drawerOpen, setDrawerOpen] = React.useState(false);
-  const navigate = useNavigate(); // Initialize useNavigate
+  const [events, setEvents] = useState([]);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [newEvent, setNewEvent] = useState({
+    title: '',
+    description: '',
+    date: null,
+    location: ''
+  });
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // Fetch attendance data from the backend
+  // Fetch events from backend
   useEffect(() => {
-    // Replace with your actual endpoint
-    axios.get('/api/attendance/records')
-      .then(response => {
-        setAttendanceData(response.data); // Assuming data is an array of records
-      })
-      .catch(err => console.log('Error fetching attendance data: ', err));
+    const fetchEvents = async () => {
+      try {
+        setLoading(true);
+        const response = await axiosInstance.get('/api/events/');
+        setEvents(response.data);
+      } catch (error) {
+        console.error('Error fetching events:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvents();
   }, []);
 
-  // Handle date selection
-  const handleDateClick = (selectedDate) => {
-    setSelectedDate(selectedDate);
-    setOpen(true);
+  const handleDateClick = (date) => {
+    setNewEvent(prev => ({
+      ...prev,
+      date: date
+    }));
+    setOpenDialog(true);
   };
 
-  // Handle form submission for remarks
-  const handleSubmit = () => {
-    if (selectedDate && attendanceRemark) {
-      // Save the remark for the selected date
-      const newRecord = {
-        date: selectedDate.toISOString(),
-        remark: attendanceRemark
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewEvent(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmitEvent = async () => {
+    if (!newEvent.date || !newEvent.title) {
+      alert('Title and date are required!');
+      return;
+    }
+
+    try {
+      const payload = {
+        ...newEvent,
+        date: newEvent.date.toISOString().split('T')[0] // Format as YYYY-MM-DD
       };
 
-      axios.post('/api/attendance/add-remark', newRecord)
-        .then(response => {
-          setAttendanceData([...attendanceData, response.data]);
-          setOpen(false);
-        })
-        .catch(error => {
-          console.error("Error saving remark:", error);
-        });
-    } else {
-      alert("Please provide a remark!");
+      const response = await axiosInstance.post('/api/events/', payload);
+      setEvents([...events, response.data]);
+      setOpenDialog(false);
+      setNewEvent({
+        title: '',
+        description: '',
+        date: null,
+        location: ''
+      });
+    } catch (error) {
+      console.error('Error creating event:', error);
     }
   };
 
-  // Render attendance for the selected date
-  const renderAttendanceForSelectedDate = (date) => {
-    const record = attendanceData.find(item => item.date === date.toISOString());
+  const renderEventsForSelectedDate = (date) => {
+    if (!date) return null;
+    
+    const dateStr = date.toISOString().split('T')[0];
+    const dayEvents = events.filter(event => event.date === dateStr);
 
-    if (record) {
+    if (loading) {
+      return (
+        <Box display="flex" justifyContent="center" alignItems="center" height="100%">
+          <CircularProgress />
+        </Box>
+      );
+    }
+
+    if (dayEvents.length > 0) {
       return (
         <div>
-          <Typography variant="h6">Attendance Record</Typography>
-          <Typography>{record.remark}</Typography>
+          <Typography variant="h6" gutterBottom>
+            Events on {date.toLocaleDateString()}
+          </Typography>
+          {dayEvents.map((event, index) => (
+            <Box key={index} mb={2} p={2} border={1} borderRadius={2} borderColor="divider">
+              <Typography variant="subtitle1" fontWeight="bold">
+                {event.title}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                <EventIcon fontSize="small" /> {event.date}
+              </Typography>
+              {event.location && (
+                <Typography variant="body2">
+                  Location: {event.location}
+                </Typography>
+              )}
+              {event.description && (
+                <Typography variant="body2" mt={1}>
+                  {event.description}
+                </Typography>
+              )}
+            </Box>
+          ))}
         </div>
       );
     } else {
       return (
-        <div>
-          <Typography variant="h6">No attendance recorded for this day.</Typography>
-        </div>
+        <Box textAlign="center" py={4}>
+          <Typography variant="h6">No events scheduled</Typography>
+          <Button 
+            variant="outlined" 
+            startIcon={<AddIcon />}
+            onClick={() => handleDateClick(date)}
+            sx={{ mt: 2 }}
+          >
+            Add Event
+          </Button>
+        </Box>
       );
     }
-  };
-
-  const handleNavigation = (path) => {
-    setDrawerOpen(false);
-    navigate(path);
   };
 
   const toggleDrawer = () => {
@@ -93,73 +165,101 @@ const CalendarPage = () => {
 
   return (
     <>
-    <AppBarComponent toggleDrawer={toggleDrawer} />
-    <Drawer anchor="left" open={drawerOpen} onClose={() => setDrawerOpen(false)}>
-        <List>
-          <ListItem button onClick={() => handleNavigation('/adminHome')}>
-            <ListItemText primary="Dashboard" />
-          </ListItem>
-          <ListItem button onClick={() => handleNavigation('/attendance')}>
-            <ListItemText primary="Attendance Records" />
-          </ListItem>
-          <ListItem button onClick={() => handleNavigation('/studentsManagement')}>
-            <ListItemText primary="Students" />
-          </ListItem>
-          <ListItem button onClick={() => handleNavigation('/reports')}>
-            <ListItemText primary="Reports" />
-          </ListItem>
-          <ListItem button onClick={() => handleNavigation('/calendarPage')}>
-            <ListItemText primary="Calendar" />
-          </ListItem>
-          <ListItem button onClick={() => handleNavigation('/')}>
-            <ListItemText primary="Logout" />
-          </ListItem>
-        </List>
-      </Drawer>
-    <div style={{ padding: '20px' }}>
-      <Typography variant="h4" gutterBottom>Student Attendance Calendar</Typography>
-      
-      <Grid container spacing={3}>
-        <Grid item xs={12} sm={6} md={8}>
-          <CalendarWrapper>
-            <Calendar
-              onChange={setDate}
-              value={date}
-              onClickDay={handleDateClick} // Trigger when a day is clicked
-            />
-          </CalendarWrapper>
+      <CustomAppBar openDrawer={drawerOpen} toggleDrawer={toggleDrawer} />
+      <div style={{ padding: '20px', marginTop: '64px' }}>
+        <Typography variant="h4" gutterBottom>Event Calendar</Typography>
+        
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={8}>
+            <CalendarWrapper>
+              <Calendar
+                onChange={setDate}
+                value={date}
+                onClickDay={handleDateClick}
+                tileContent={({ date, view }) => {
+                  if (view === 'month') {
+                    const dateStr = date.toISOString().split('T')[0];
+                    const hasEvents = events.some(event => event.date === dateStr);
+                    return hasEvents ? (
+                      <div style={{ marginTop: '5px' }}>
+                        <Chip 
+                          icon={<EventIcon style={{ fontSize: '12px' }} />}
+                          label=""
+                          size="small"
+                          color="primary"
+                          style={{ height: '18px' }}
+                        />
+                      </div>
+                    ) : null;
+                  }
+                }}
+              />
+            </CalendarWrapper>
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <div style={{ 
+              padding: '20px', 
+              border: '1px solid #ccc', 
+              borderRadius: '8px', 
+              minHeight: '400px',
+              backgroundColor: '#f9f9f9'
+            }}>
+              {renderEventsForSelectedDate(date)}
+            </div>
+          </Grid>
         </Grid>
-        <Grid item xs={12} sm={6} md={4}>
-          <div style={{ padding: '20px', border: '1px solid #ccc', borderRadius: '8px' }}>
-            {renderAttendanceForSelectedDate(selectedDate || date)}
-          </div>
-        </Grid>
-      </Grid>
 
-      <Dialog open={open} onClose={() => setOpen(false)}>
-        <DialogTitle>Add Attendance Remark</DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Remark"
-            type="text"
-            fullWidth
-            variant="outlined"
-            value={attendanceRemark}
-            onChange={(e) => setAttendanceRemark(e.target.value)}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpen(false)} color="primary">
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} color="primary">
-            Save
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </div>
+        {/* Add Event Dialog */}
+        <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="sm" fullWidth>
+          <DialogTitle>
+            Add New Event - {newEvent.date?.toLocaleDateString() || 'Select date'}
+          </DialogTitle>
+          <DialogContent>
+            <TextField
+              autoFocus
+              margin="dense"
+              name="title"
+              label="Event Title"
+              type="text"
+              fullWidth
+              variant="outlined"
+              required
+              value={newEvent.title}
+              onChange={handleInputChange}
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              margin="dense"
+              name="location"
+              label="Location"
+              type="text"
+              fullWidth
+              variant="outlined"
+              value={newEvent.location}
+              onChange={handleInputChange}
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              margin="dense"
+              name="description"
+              label="Description"
+              type="text"
+              fullWidth
+              variant="outlined"
+              multiline
+              rows={4}
+              value={newEvent.description}
+              onChange={handleInputChange}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
+            <Button onClick={handleSubmitEvent} variant="contained" color="primary">
+              Save Event
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </div>
     </>
   );
 };

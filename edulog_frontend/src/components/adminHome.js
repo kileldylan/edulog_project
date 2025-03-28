@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
   Typography,
-  Drawer,
   List,
   ListItem,
   ListItemText,
-  CssBaseline,
   Container,
   Grid,
   Paper,
@@ -26,7 +24,7 @@ import {
   Legend,
 } from 'chart.js';
 import { useNavigate } from 'react-router-dom';
-import AppBarComponent from './CustomAppBar';
+import CustomAppBar from '../components//CustomAppBar';
 import axiosInstance from '../utils/axiosInstance';
 import EventIcon from '@mui/icons-material/Event';
 import PersonIcon from '@mui/icons-material/Person';
@@ -44,6 +42,7 @@ ChartJS.register(
 
 const AdminHome = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const toggleDrawer = () => setDrawerOpen(!drawerOpen);
   const [totalStudents, setTotalStudents] = useState(0);
   const [attendanceToday, setAttendanceToday] = useState(0);
   const [absentStudents, setAbsentStudents] = useState(0);
@@ -129,11 +128,6 @@ const AdminHome = () => {
     }]
   });
 
-  const handleNavigation = (path) => {
-    setDrawerOpen(false);
-    navigate(path);
-  };
-
   const renderStatusIcon = (status) => {
     switch (status.toLowerCase()) {
       case 'present': return <CheckCircleIcon color="success" />;
@@ -153,25 +147,10 @@ const AdminHome = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <AppBarComponent toggleDrawer={() => setDrawerOpen(!drawerOpen)} />
-      <CssBaseline />
-      
-      <Drawer anchor="left" open={drawerOpen} onClose={() => setDrawerOpen(false)}>
-        <List>
-          {['/adminHome', '/attendance', '/studentsManagement', '/reports', '/calendarPage', '/'].map((path) => (
-            <ListItem button key={path} onClick={() => handleNavigation(path)}>
-              <ListItemText primary={
-                path === '/' ? 'Logout' : 
-                path.substring(1).replace(/([A-Z])/g, ' $1').trim()
-              } />
-            </ListItem>
-          ))}
-        </List>
-      </Drawer>
-
-      <Container style={{ marginTop: '80px', marginBottom: '40px' }}>
+        <CustomAppBar openDrawer={drawerOpen} toggleDrawer={toggleDrawer} />
+        <Container style={{ marginTop: '80px', marginBottom: '40px' }}>
         <Typography variant="h4" gutterBottom>
-          Welcome, {username}!
+                  Welcome, {username}!
         </Typography>
 
         <Grid container spacing={3}>

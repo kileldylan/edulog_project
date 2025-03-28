@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { TextField, Button, Typography, Container, Grid, Box, Paper } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
-import loginImage from './images/loginImage.jpg'; // Adjust the path based on your folder structure
-import { loginUser} from "../utils/api";
-import axiosInstance  from '../utils/axiosInstance';
+import loginImage from './images/loginImage.jpg';
+import { loginUser } from "../utils/api";
+import { setAuthTokens } from '../utils/axiosInstance'; 
 
 const Login = () => {
     const [email, setEmail] = useState(''); 
@@ -16,30 +16,29 @@ const Login = () => {
         setError(null);
       
         try {
-          const response = await loginUser({ email, password });
-          
-          // Clear all previous sessions
-          sessionStorage.clear();
-      
-          // Store auth data
-          sessionStorage.setItem('access_token', response.access_token);
-          sessionStorage.setItem('refresh_token', response.refresh_token);
-          sessionStorage.setItem('role', response.role);
-      
-          // Store student-specific data
-          if (response.role === 'student') {
-            sessionStorage.setItem('student_id', response.student_id);
-            sessionStorage.setItem('student_name', response.student_name);
-          }
-      
-          // Set axiosInstance default headers
-          axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${response.access_token}`;
-          
-          navigate(response.role === 'admin' ? '/adminHome' : '/studentHome');
-      
+            const response = await loginUser({ email, password });
+            
+            // Clear all previous sessions
+            sessionStorage.clear();
+        
+            // Store auth data using the setAuthTokens function
+            setAuthTokens(response.access_token, response.refresh_token);
+            
+            // Store additional user data
+            sessionStorage.setItem('role', response.role);
+        
+            // Store student-specific data
+            if (response.role === 'student') {
+                sessionStorage.setItem('student_id', response.student_id);
+                sessionStorage.setItem('student_name', response.student_name);
+            }
+        
+            // Navigate based on role
+            navigate(response.role === 'admin' ? '/adminHome' : '/studentHome');
+        
         } catch (err) {
-          setError(err.response?.data?.error || err.message || 'Login failed');
-          sessionStorage.clear();
+            setError(err.response?.data?.error || err.message || 'Login failed');
+            sessionStorage.clear();
         }
     };
     
@@ -47,9 +46,8 @@ const Login = () => {
         <Container component="main" maxWidth="xs">
             <Paper elevation={3} sx={{ p: 3, mt: 8, borderRadius: 2 }}>
                 <Box sx={{ textAlign: 'center', mb: 2 }}>
-                    {/* School Image Placeholder */}
                     <img
-                        src={loginImage} // Replace this URL with the school image URL
+                        src={loginImage}
                         alt="School Logo"
                         style={{ width: '80%', borderRadius: 8, marginBottom: 20 }}
                     />
@@ -69,7 +67,7 @@ const Login = () => {
                                 variant="outlined"
                                 required
                                 fullWidth
-                                label="Email" // Changed from Username to Email
+                                label="Email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                             />

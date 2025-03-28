@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Box, Typography, Drawer, Table, TableBody, TableCell, TableContainer, 
-        TableHead, TableRow, List, ListItem, ListItemText, Paper, 
+import { Box, Typography, Table, TableBody, TableCell, TableContainer, 
+        TableHead, TableRow, Paper, 
         IconButton, Snackbar, Alert, Dialog, DialogActions, 
         DialogContent, DialogTitle, TextField, Button } from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
-import AppBarComponent from '../components/CustomAppBar';
+import CustomAppBar from '../components/CustomAppBar';
 import axiosInstance from '../utils/axiosInstance';
 
 const AttendanceManagement = () => {
@@ -26,7 +25,7 @@ const AttendanceManagement = () => {
         clock_out_time: ''
     });
     const [drawerOpen, setDrawerOpen] = useState(false);
-    const navigate = useNavigate();
+    const toggleDrawer = () => setDrawerOpen(!drawerOpen);
 
     const fetchAttendanceRecords = useCallback(async () => {
         try {
@@ -119,31 +118,9 @@ const AttendanceManagement = () => {
         return time;
     };
 
-    const handleNavigation = (path) => {
-        setDrawerOpen(false);
-        navigate(path);
-    };
-
     return (
         <>
-            <AppBarComponent toggleDrawer={() => setDrawerOpen(!drawerOpen)} />
-            <Drawer anchor="left" open={drawerOpen} onClose={() => setDrawerOpen(false)}>
-                <List>
-                    {['/adminHome', '/attendance', '/studentsManagement', '/reports', '/calendarPage', '/'].map((path) => (
-                        <ListItem 
-                            button 
-                            key={path} 
-                            onClick={() => handleNavigation(path)}
-                        >
-                            <ListItemText primary={
-                                path === '/' ? 'Logout' : 
-                                path.substring(1).replace(/([A-Z])/g, ' $1').trim()
-                            } />
-                        </ListItem>
-                    ))}
-                </List>
-            </Drawer>
-
+            <CustomAppBar openDrawer={drawerOpen} toggleDrawer={toggleDrawer} />
             <Box sx={{ p: 10 }}>
                 <Typography variant="h4" sx={{ mb: 3 }}>Attendance Records</Typography>
 

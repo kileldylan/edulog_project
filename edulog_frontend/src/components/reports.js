@@ -3,6 +3,7 @@ import { CSVLink } from 'react-csv';
 import * as XLSX from 'xlsx';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import CustomAppBar from '../components/CustomAppBar'
 import {
   Box,
   Button,
@@ -38,7 +39,9 @@ const ReportsPage = () => {
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchInput, setSearchInput] = useState('');
   const [loading, setLoading] = useState(true);
-
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const toggleDrawer = () => setDrawerOpen(!drawerOpen);
+  
   // Fetch filter options on component mount
   useEffect(() => {
     const fetchFilterOptions = async () => {
@@ -137,6 +140,8 @@ const ReportsPage = () => {
   }
 
   return (
+    <>
+    <CustomAppBar openDrawer={drawerOpen} toggleDrawer={toggleDrawer} />
     <Box padding={3}>
       <Typography variant="h4" gutterBottom>
         Attendance Reports
@@ -278,6 +283,7 @@ const ReportsPage = () => {
         </Table>
       </TableContainer>
     </Box>
+    </>
   );
 };
 

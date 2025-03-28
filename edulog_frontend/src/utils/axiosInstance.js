@@ -9,12 +9,28 @@ const axiosInstance = axios.create({
   },
 });
 
-// Add a request interceptor
+// Token expiration check function
+const isTokenExpired = (tokenTimestamp) => {
+  if (!tokenTimestamp) return true;
+  const now = new Date().getTime();
+  const tokenAge = now - tokenTimestamp;
+  // token expires after 15 minutes (900000 ms)
+  return tokenAge > 900000; 
+};
+
+// Add request interceptor
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = sessionStorage.getItem('access_token');
-    if (token) {
+    const tokenTimestamp = parseInt(sessionStorage.getItem('token_timestamp'));
+    
+    // Check if token exists and is not expired
+    if (token && !isTokenExpired(tokenTimestamp)) {
       config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      // Token expired or doesn't exist
+      sessionStorage.removeItem('access_token');
+      sessionStorage.removeItem('token_timestamp');
     }
     return config;
   },
@@ -23,7 +39,7 @@ axiosInstance.interceptors.request.use(
   }
 );
 
-// Add a response interceptor
+// Add response interceptor
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -34,14 +50,21 @@ axiosInstance.interceptors.response.use(
 
       try {
         const refreshToken = sessionStorage.getItem('refresh_token');
-        const response = await axios.post(`${API_BASE_URL}/token/refresh/`, { refresh: refreshToken });
+        const response = await axios.post(`${API_BASE_URL}/token/refresh/`, { 
+          refresh: refreshToken 
+        });
         
+        // Store new token and timestamp
         sessionStorage.setItem('access_token', response.data.access);
-        originalRequest.headers.Authorization = `Bearer ${response.data.access}`;
+        sessionStorage.setItem('token_timestamp', new Date().getTime());
         
+        originalRequest.headers.Authorization = `Bearer ${response.data.access}`;
         return axiosInstance(originalRequest);
       } catch (refreshError) {
-        sessionStorage.clear();
+        // Clear all auth data if refresh fails
+        sessionStorage.removeItem('access_token');
+        sessionStorage.removeItem('refresh_token');
+        sessionStorage.removeItem('token_timestamp');
         window.location.href = '/login';
         return Promise.reject(refreshError);
       }
@@ -50,5 +73,12 @@ axiosInstance.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// Helper function to set tokens with timestamp
+export const setAuthTokens = (access, refresh) => {
+  sessionStorage.setItem('access_token', access);
+  sessionStorage.setItem('refresh_token', refresh);
+  sessionStorage.setItem('token_timestamp', new Date().getTime());
+};
 
 export default axiosInstance;
