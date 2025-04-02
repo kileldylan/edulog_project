@@ -17,3 +17,9 @@ envVars:
     value: '0'
   - key: STATIC_ROOT
     value: '/opt/render/project/src/staticfiles'
+services:
+  - type: web
+    name: edulog_project
+    postDeployCommand: |
+      python manage.py makemigrations
+      python manage.py migrate
