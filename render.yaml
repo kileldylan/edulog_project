@@ -18,21 +18,16 @@ envVars:
   - key: STATIC_ROOT
     value: '/opt/render/project/src/staticfiles'
   - key: PYTHONPATH
-    value: /opt/render/project/src/edulog_backend
-  - key: DJANGO_SETTINGS_MODULE
-    value: edulog.settings
+    value: /opt/render/project/src  
+    value: edulog_backend.edulog.settings 
 
 services:
   - type: web
     name: edulog_project
-    workingDirectory: edulog_backend
-    startCommand: gunicorn edulog.wsgi:application --bind 0.0.0.0:$PORT
+    workingDirectory: /opt/render/project/src/edulog_backend  # Full path added
+    startCommand: gunicorn edulog_backend.edulog.wsgi:application --bind 0.0.0.0:$PORT  # Full import path
     postDeployCommand: |
+      echo "Current working directory: $(pwd)"
+      echo "PYTHONPATH: $PYTHONPATH"
       python manage.py makemigrations
       python manage.py migrate
-
-postDeployCommand: |
-  echo "Current working directory: $(pwd)"
-  echo "PYTHONPATH: $PYTHONPATH"
-  python manage.py makemigrations
-  python manage.py migrate
