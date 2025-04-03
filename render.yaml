@@ -17,16 +17,16 @@ envVars:
     value: '0'
   - key: STATIC_ROOT
     value: '/opt/render/project/src/staticfiles'
+  - key: PYTHONPATH
+    value: /opt/render/project/src/edulog_backend
+  - key: DJANGO_SETTINGS_MODULE
+    value: edulog.settings
 
 services:
   - type: web
     name: edulog_project
+    workingDirectory: edulog_backend
+    startCommand: gunicorn edulog.wsgi:application --bind 0.0.0.0:$PORT
     postDeployCommand: |
       python manage.py makemigrations
       python manage.py migrate
-
-envVars:
-  - key: PYTHONPATH
-    value: edulog_backend
-  - key: DJANGO_SETTINGS_MODULE
-    value: edulog.settings
