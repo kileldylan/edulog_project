@@ -30,3 +30,9 @@ services:
     postDeployCommand: |
       python manage.py makemigrations
       python manage.py migrate
+
+postDeployCommand: |
+  echo "Current working directory: $(pwd)"
+  echo "PYTHONPATH: $PYTHONPATH"
+  python manage.py makemigrations
+  python manage.py migrate
