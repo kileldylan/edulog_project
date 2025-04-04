@@ -18,8 +18,9 @@ envVars:
   - key: STATIC_ROOT
     value: '/opt/render/project/src/staticfiles'
   - key: PYTHONPATH
-    value: /opt/render/project/src  
-    value: edulog_backend.edulog.settings 
+    value: /opt/render/project/src
+  - key: DJANGO_SETTINGS_MODULE
+    value: edulog_backend.edulog.settings  
 
 services:
   - type: web
