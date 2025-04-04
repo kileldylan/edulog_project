@@ -188,13 +188,6 @@ AUTH_USER_MODEL = "edulog_app.CustomUser"
 LOGIN_URL = '/admin/login/'
 LOGIN_REDIRECT_URL = '/admin/'
 
-MIGRATION_MODULES = {
-    'admin': 'edulog_app.migrations_admin',
-    'auth': 'edulog_app.migrations_auth',
-    'contenttypes': 'edulog_app.migrations_contenttypes',
-    'sessions': 'edulog_app.migrations_sessions',
-}
-
 SILENCED_SYSTEM_CHECKS = [
     'admin.E408',
     'admin.E409',
