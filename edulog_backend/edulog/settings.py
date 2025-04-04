@@ -109,9 +109,18 @@ SIMPLE_JWT = {
     "BLACKLIST_AFTER_ROTATION": True,
 }
 
-#database from env
 DATABASES = {
-    'default': dj_database_url.config(default=os.getenv("DATABASE_URL"))
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'kileldenis$default',
+        'USER': 'kileldenis',
+        'PASSWORD': '1609kilel', 
+        'HOST': 'kileldenis.mysql.pythonanywhere-services.com',
+        'PORT': '3306',
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+        }
+    }
 }
 
 WSGI_APPLICATION = 'edulog.wsgi.application'
