@@ -59,7 +59,6 @@ REST_FRAMEWORK = {
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
-    'edulog_app.backends.EmailAuthBackend',
 ]
 
 MIDDLEWARE = [
@@ -186,3 +185,12 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
 
 AUTH_USER_MODEL = "edulog_app.CustomUser"
+LOGIN_URL = '/admin/login/'
+LOGIN_REDIRECT_URL = '/admin/'
+
+MIGRATION_MODULES = {
+    'auth': None,
+    'admin': None,
+    'contenttypes': None,
+    'sessions': None,
+}
