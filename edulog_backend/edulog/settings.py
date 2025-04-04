@@ -27,7 +27,7 @@ load_dotenv()
 
 SECRET_KEY = '&)cl0^$jtry@lydp%bb19*6y@9a)t^_yblq1@859ety_zglc$f'
 DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'kileldenis.pythonanywhere.com').split(',')
 CSRF_TRUSTED_ORIGINS = os.getenv("CSRF_TRUSTED_ORIGINS", "").split()
 
 # Application definition

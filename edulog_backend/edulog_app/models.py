@@ -50,6 +50,9 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
 
+    class Meta:
+        db_table = 'edulog_app_customuser' 
+
 class AttendanceLog(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
