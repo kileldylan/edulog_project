@@ -24,9 +24,6 @@ class LoginUserView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        print("\n=== Login Attempt ===")
-        print("Received data:", request.data)
-        
         email = request.data.get("email")
         password = request.data.get("password")
 
@@ -67,7 +64,7 @@ class RegisterUserView(APIView):
             serializer.save()
             return Response({"success": True, "message": "User registered"}, status=status.HTTP_201_CREATED)
         else:
-            logger.error("Registration validation errors: %s", serializer.errors)  # Log validation errors
+            logger.error("Registration validation errors: %s", serializer.errors) 
             return Response({"success": False, "errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 class DepartmentViewSet(viewsets.ModelViewSet):
@@ -165,7 +162,7 @@ class AttendanceUpdateView(APIView):
         try:
             attendance_record = Attendance.objects.get(id=pk)
             
-            # Create a copy of request data without read-only fields
+            # Creating a copy of request data without read-only fields
             update_data = request.data.copy()
             update_data.pop('student_id', None)
             update_data.pop('student_name', None)
@@ -270,7 +267,6 @@ class AttendanceStatusView(APIView):
 
     def get(self, request, student_id):  
         try:
-            # Get the student (either by ID or student_id)
             student = CustomUser.objects.filter(Q(id=student_id) | Q(student_id=student_id)).first()
             
             if not student:
@@ -345,7 +341,7 @@ class StudentReportView(APIView):
         department_filter = request.query_params.get('departmentFilter')
         student_name_filter = request.query_params.get('studentNameFilter')
 
-        # Build filters for attendance records
+        # filters for attendance records
         attendance_filters = Q()
         if start_date and end_date:
             start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
@@ -399,7 +395,7 @@ class ReportFilterOptionsView(APIView):
     permission_classes = [IsAdmin]
     
     def get(self, request):
-        # Get all available filter options
+        # all available filter options
         departments = Department.objects.values_list('name', flat=True).distinct()
         status_choices = [choice[0] for choice in Attendance.STATUS_CHOICES]
         

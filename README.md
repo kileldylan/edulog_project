@@ -9,6 +9,9 @@ EduLog is a simple student attendance tracking system. It helps institutions kee
 - Track student attendance  
 - View department-wise statistics  
 - Display student details  
+- Manage attendance
+- Generate attendance reports
+- 
 
 ## Tech Stack  
 - **Frontend:** React.js, @mui/material  
@@ -36,8 +39,3 @@ EduLog is a simple student attendance tracking system. It helps institutions kee
    ```bash
     python manage.py runserver
    ```  
-
-## Future Improvements  
-- Add user authentication  
-- Improve UI/UX  
-- Include attendance analytics  

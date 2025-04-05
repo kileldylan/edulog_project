@@ -17,10 +17,9 @@ class CustomUserSerializer(serializers.ModelSerializer):
         }
 
     def create(self, validated_data):
-        # Extract password first
         password = validated_data.pop('password')
         user = CustomUser(**validated_data)
-        user.set_password(password)  # This properly hashes the password
+        user.set_password(password)
         user.save()
         return user
 
@@ -67,10 +66,10 @@ class AdminAttendanceSerializer(serializers.ModelSerializer):
         return data
     
 class AttendanceSerializer(serializers.ModelSerializer):
-    student_id = serializers.IntegerField(source='user.id', read_only=True)  # Add student_id
-    student_name = serializers.CharField(source='user.username', read_only=True)  # Add student_name
-    clockInTime = serializers.TimeField(source='clock_in_time', read_only=True)  # Map clock_in_time to clockInTime
-    clockOutTime = serializers.TimeField(source='clock_out_time', read_only=True)  # Map clock_out_time to clockOutTime
+    student_id = serializers.IntegerField(source='user.id', read_only=True)  
+    student_name = serializers.CharField(source='user.username', read_only=True) 
+    clockInTime = serializers.TimeField(source='clock_in_time', read_only=True) 
+    clockOutTime = serializers.TimeField(source='clock_out_time', read_only=True)
 
     class Meta:
         model = Attendance
