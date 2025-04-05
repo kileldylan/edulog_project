@@ -24,32 +24,39 @@ class LoginUserView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
+        print("\n=== Login Attempt ===")
+        print("Received data:", request.data)
+        
         email = request.data.get("email")
         password = request.data.get("password")
 
-        user = authenticate(email=email, password=password)
+        if not email or not password:
+            return Response({"error": "Email and password required"}, status=400)
 
-        if user is not None:
-            refresh = RefreshToken.for_user(user)
-            
-            response_data = {
+        # Manual authentication check
+        try:
+            user = CustomUser.objects.get(email=email)
+            print(f"User found: {user}")
+            print(f"Password valid: {user.check_password(password)}")
+        except CustomUser.DoesNotExist:
+            print("User not found")
+            user = None
+
+        # System authentication
+        auth_user = authenticate(email=email, password=password)
+        print(f"Auth backend returned: {auth_user}")
+
+        if auth_user:
+            refresh = RefreshToken.for_user(auth_user)
+            return Response({
                 "access_token": str(refresh.access_token),
                 "refresh_token": str(refresh),
-                "role": user.role,
-                "message": "Login successful!",
-            }
-
-            # Adding student-specific data only for students
-            if user.role == 'student':
-                response_data.update({
-                    "student_id": user.student_id,
-                    "student_name": user.username
-                })
-
-            return Response(response_data, status=status.HTTP_200_OK)
-        else:
-            return Response({"error": "Invalid credentials! Please try again."}, status=status.HTTP_401_UNAUTHORIZED)
+                "role": auth_user.role,
+                "student_id": auth_user.student_id if auth_user.role == 'student' else None
+            })
         
+        return Response({"error": "Invalid credentials"}, status=401)
+    
 class RegisterUserView(APIView):
     permission_classes = [AllowAny]
 

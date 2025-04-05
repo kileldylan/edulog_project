@@ -60,7 +60,7 @@ const AdminHome = () => {
         setLoading(true);
         
         // 1. Fetch username
-        const storedUsername = localStorage.getItem('username');
+        const storedUsername = sessionStorage.getItem('username');
         if (storedUsername) setUsername(storedUsername);
 
         // 2. Fetch total students

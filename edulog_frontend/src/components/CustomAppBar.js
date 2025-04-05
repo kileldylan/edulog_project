@@ -43,7 +43,7 @@ const AppBarComponent = ({ openDrawer, toggleDrawer }) => {
               onClick={handleMenu}
             >
             </IconButton>
-            <IconButton color="inherit" onClick={() => navigate('/profile')}>
+            <IconButton color="inherit" onClick={() => navigate('/adminHome')}>
                 <AccountCircleIcon />
             </IconButton>
             <Menu
@@ -74,7 +74,10 @@ const AppBarComponent = ({ openDrawer, toggleDrawer }) => {
             <ListItemText primary="Reports" />
           </ListItem>
           <ListItem button={true} onClick={() => handleNavigation('/calendarPage')}>
-            <ListItemText primary="Calendar" />
+            <ListItemText primary="Events Calendar" />
+          </ListItem>
+          <ListItem button={true} onClick={() => handleNavigation('/login')}>
+            <ListItemText primary="Logout" />
           </ListItem>
         </List>
       </Drawer>

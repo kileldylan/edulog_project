@@ -16,23 +16,18 @@ class CustomUserSerializer(serializers.ModelSerializer):
             'student_id': {'required': False, 'allow_blank': True},
         }
 
-        def create(self, validated_data):
-            department = validated_data.get('department')
-            role = validated_data.get('role')
-            student_id = validated_data.get('student_id', None)
+    def create(self, validated_data):
+        # Extract password first
+        password = validated_data.pop('password')
+        user = CustomUser(**validated_data)
+        user.set_password(password)  # This properly hashes the password
+        user.save()
+        return user
 
-            user = CustomUser.objects.create_user(**validated_data)
-
-            if role == 'student':
-                if not student_id:
-                    raise serializers.ValidationError({"student_id": "This field is required for students."})
-                user.student_id = student_id
-
-            if department:
-                user.department = department
-
-            user.save()
-            return user
+    def update(self, instance, validated_data):
+        if 'password' in validated_data:
+            instance.set_password(validated_data['password'])
+        return super().update(instance, validated_data)
     
 class DepartmentSerializer(serializers.ModelSerializer):
     class Meta:
@@ -53,7 +48,7 @@ class AdminAttendanceSerializer(serializers.ModelSerializer):
             'status',
             'clock_in_time',
             'clock_out_time',
-            'user'  # Add this to properly handle user relationship
+            'user' 
         ]
         read_only_fields = [
             'created_at',

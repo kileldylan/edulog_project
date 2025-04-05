@@ -167,7 +167,7 @@ const CalendarPage = () => {
     <>
       <CustomAppBar openDrawer={drawerOpen} toggleDrawer={toggleDrawer} />
       <div style={{ padding: '20px', marginTop: '64px' }}>
-        <Typography variant="h4" gutterBottom>Event Calendar</Typography>
+        <Typography variant="h4" gutterBottom>Events Calendar</Typography>
         
         <Grid container spacing={3}>
           <Grid item xs={12} md={8}>

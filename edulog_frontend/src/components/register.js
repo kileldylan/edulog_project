@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import { PersonAdd as PersonAddIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { registerUser, fetchDepartments } from "../utils/api";
+import { registerUser} from "../utils/api";
 
 function Register() {
   const [userType, setUserType] = useState('student');
@@ -23,28 +23,12 @@ function Register() {
     username: '', 
     email: '', 
     password: '',
-    department_id: ''
   });
-  const [departments, setDepartments] = useState([]);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
-    const loadDepartments = async () => {
-      try {
-        const depts = await fetchDepartments();
-        if (depts && depts.length > 0) {
-          setDepartments(depts);
-        } else {
-          console.warn('No departments received from API');
-        }
-      } catch (err) {
-        console.error('Error loading departments:', err);
-        setError('Failed to load departments. Please try again later.');
-      }
-    };
-    loadDepartments();
   }, []);
 
   const handleRegister = async () => {
@@ -123,21 +107,6 @@ function Register() {
             value={userDetails.student_id}
             onChange={(e) => setUserDetails({ ...userDetails, student_id: e.target.value })}
           />
-          
-          <FormControl fullWidth margin="normal">
-            <InputLabel>Department</InputLabel>
-            <Select
-              value={userDetails.department_id}
-              label="Department"
-              onChange={(e) => setUserDetails({ ...userDetails, department_id: e.target.value })}
-            >
-              {departments.map((dept) => (
-                <MenuItem key={dept.id} value={dept.id}>
-                  {dept.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
         </>
       )}
 
