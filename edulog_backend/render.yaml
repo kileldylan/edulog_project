@@ -1,3 +1,13 @@
+services:
+  - type: web
+    name: edulog_project
+    workingDirectory: /opt/render/project/src/edulog_backend
+    startCommand: gunicorn edulog.wsgi:application --bind 0.0.0.0:$PORT
+    postDeployCommand: |
+      echo "Running migrations..."
+      python manage.py makemigrations
+      python manage.py migrate
+
 envVars:
   - key: SECRET_KEY
     generateValue: true 
@@ -16,18 +26,6 @@ envVars:
   - key: DISABLE_COLLECTSTATIC
     value: '0'
   - key: STATIC_ROOT
-    value: '/opt/render/project/src/staticfiles'
+    value: '/opt/render/project/src/edulog_backend/staticfiles'
   - key: PYTHONPATH
-    value: /opt/render/project/src/edulog_backend
-    value: edulog_backend.edulog.settings 
-
-services:
-  - type: web
-    name: edulog_project
-    workingDirectory: /opt/render/project/src/edulog_backend
-    startCommand: gunicorn edulog_backend.edulog.wsgi:application --bind 0.0.0.0:$PORT 
-    postDeployCommand: |
-      echo "Current working directory: $(pwd)"
-      echo "PYTHONPATH: $PYTHONPATH"
-      python manage.py makemigrations
-      python manage.py migrate
+    value: /opt/render/project/src/edulog_backend  
