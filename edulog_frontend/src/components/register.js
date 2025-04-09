@@ -6,11 +6,7 @@ import {
   Typography, 
   Radio, 
   RadioGroup, 
-  FormControlLabel,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel
+  FormControlLabel
 } from '@mui/material';
 import { PersonAdd as PersonAddIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';

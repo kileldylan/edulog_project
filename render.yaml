@@ -1,7 +1,7 @@
 services:
   - type: web
     name: edulog_project
-    workingDirectory: ./edulog_backend
+    workingDirectory: /opt/render/project/src/edulog_backend
     startCommand: gunicorn edulog.wsgi:application --bind 0.0.0.0:$PORT
     postDeployCommand: |
       echo "Running migrations..."
