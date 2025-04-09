@@ -28,4 +28,4 @@ envVars:
   - key: STATIC_ROOT
     value: '/opt/render/project/src/edulog_backend/staticfiles'
   - key: PYTHONPATH
-    value: /opt/render/project/src/edulog_backend  
+    value: /opt/render/project/src  
