@@ -2,14 +2,14 @@ services:
   - type: web
     name: edulog_project
     workingDirectory: /opt/render/project/src/edulog_backend
-    startCommand: gunicorn edulog.wsgi:application --bind 0.0.0.0:$PORT
-    autoDeploy: true
-    postDeployCommand: |
-      echo "Running migrations..."
-      python manage.py makemigrations
-      python manage.py migrate --noinput
-      python manage.py collectstatic --noinput
-
+    startCommand: |
+      python manage.py migrate --noinput && 
+      python manage.py collectstatic --noinput && 
+      gunicorn edulog.wsgi:application --bind 0.0.0.0:$PORT
+    envVars:
+      - key: DISABLE_COLLECTSTATIC
+        value: '1' 
+        
 envVars:
   - key: SECRET_KEY
     generateValue: true 
