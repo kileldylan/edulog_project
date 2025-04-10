@@ -14,8 +14,8 @@ const isTokenExpired = (tokenTimestamp) => {
   if (!tokenTimestamp) return true;
   const now = new Date().getTime();
   const tokenAge = now - tokenTimestamp;
-  // token expires after 15 minutes (900000 ms)
-  return tokenAge > 900000; 
+  // token expires after 30 minutes (1800000 ms)
+  return tokenAge > 1800000; 
 };
 
 // Add request interceptor
