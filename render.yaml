@@ -29,3 +29,5 @@ envVars:
     value: '/opt/render/project/src/edulog_backend/staticfiles'
   - key: PYTHONPATH
     value: /opt/render/project/src/edulog_backend  
+  - key: ALLOWED_HOSTS
+    value: edulog-project.onrender.com
