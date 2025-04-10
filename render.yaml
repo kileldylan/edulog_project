@@ -3,13 +3,17 @@ services:
     name: edulog_project
     workingDirectory: /opt/render/project/src/edulog_backend
     startCommand: |
-      python manage.py migrate --noinput && 
-      python manage.py collectstatic --noinput && 
+      chmod +x prestart.sh &&
+      ./prestart.sh &&
+      echo "Running migrations..." &&
+      python manage.py makemigrations &&
+      python manage.py migrate --noinput &&
+      python manage.py collectstatic --noinput &&
       gunicorn edulog.wsgi:application --bind 0.0.0.0:$PORT
     envVars:
       - key: DISABLE_COLLECTSTATIC
         value: '1' 
-        
+
 envVars:
   - key: SECRET_KEY
     generateValue: true 
