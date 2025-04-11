@@ -112,7 +112,7 @@ REST_FRAMEWORK = {
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
-    "https://edulog-project-brsgjaoz9-kileldylans-projects.vercel.app",
+    "https://edulog-project.vercel.app",
     "https://*.onrender.com"
 ]
 
